@@ -1,15 +1,122 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cave XR Project</title>
-    <style>
-      body { margin: 0; }
-      canvas { display: block; }
-    </style>
-  </head>
-  <body>
-<script type="module" src="/src/main.js"></script> 
- </body>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Pintar no Canvas como Textura</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #paintCanvas {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      border: 2px solid black;
+      background: white;
+      z-index: 10;
+      cursor: crosshair;
+    }
+  </style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<canvas id="paintCanvas" width="256" height="256"></canvas>
+<script>
+  // 1. Cena básica Three.js
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.z = 3;
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  // 2. Canvas para desenhar
+  const paintCanvas = document.getElementById("paintCanvas");
+  const ctx = paintCanvas.getContext("2d");
+
+  // fundo inicial
+  ctx.fillStyle = "white";
+  ctx.fillRect(0, 0, paintCanvas.width, paintCanvas.height);
+
+  // 3. Criar textura a partir do canvas
+  const texture = new THREE.CanvasTexture(paintCanvas);
+
+  // 4. Criar cubo com a textura
+  const geometry = new THREE.BoxGeometry(1, 1, 1);
+  const material = new THREE.MeshBasicMaterial({ map: texture });
+  const cube = new THREE.Mesh(geometry, material);
+  scene.add(cube);
+
+  // 5. Sistema de pintura
+  let isDrawing = false;
+
+  function getPos(evt) {
+    const rect = paintCanvas.getBoundingClientRect();
+    if (evt.touches) {
+      return {
+        x: evt.touches[0].clientX - rect.left,
+        y: evt.touches[0].clientY - rect.top
+      };
+    } else {
+      return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+      };
+    }
+  }
+
+  paintCanvas.addEventListener("mousedown", e => { isDrawing = true; ctx.beginPath(); ctx.moveTo(...Object.values(getPos(e))); });
+  paintCanvas.addEventListener("mousemove", e => {
+    if (isDrawing) {
+      const { x, y } = getPos(e);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      ctx.stroke();
+      texture.needsUpdate = true; // atualizar textura
+    }
+  });
+  paintCanvas.addEventListener("mouseup", () => { isDrawing = false; });
+  paintCanvas.addEventListener("mouseleave", () => { isDrawing = false; });
+
+  // suporte a toque
+  paintCanvas.addEventListener("touchstart", e => { 
+    isDrawing = true; 
+    const { x, y } = getPos(e);
+    ctx.beginPath(); 
+    ctx.moveTo(x, y);
+  });
+  paintCanvas.addEventListener("touchmove", e => {
+    if (isDrawing) {
+      const { x, y } = getPos(e);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      ctx.stroke();
+      texture.needsUpdate = true;
+    }
+    e.preventDefault(); // evitar scroll
+  });
+  paintCanvas.addEventListener("touchend", () => { isDrawing = false; });
+
+  // 6. Loop de animação
+  function animate() {
+    requestAnimationFrame(animate);
+
+    cube.rotation.x += 0.01;
+    cube.rotation.y += 0.01;
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // 7. Ajustar ao redimensionar
+  window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+</script>
+</body>
 </html>
