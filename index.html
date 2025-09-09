@@ -51,7 +51,6 @@
       btn.addEventListener("click", () => {
         const color = btn.getAttribute("data-color");
         currentColor.set(color);
-        console.log("Selected color:", currentColor, color);
         init()
       });
     });
@@ -105,7 +104,6 @@
       // controllers
 
       function onSelectStart() {
-        console.log('select start');
         this.updateMatrixWorld(true);
 
         const pivot = this.getObjectByName('pivot');
