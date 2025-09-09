@@ -12,6 +12,15 @@
 
   <div id="info">
     <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> xr - paint
+    <div id="color-picker" style="position: absolute; top: 10px; right: 10px; z-index: 10;">
+      <button class="color-btn" data-color="#ff0000"
+        style="background:#ff0000; width:30px; height:30px; border:none; border-radius:50%; margin:5px;"></button>
+      <button class="color-btn" data-color="#00ff00"
+        style="background:#00ff00; width:30px; height:30px; border:none; border-radius:50%; margin:5px;"></button>
+      <button class="color-btn" data-color="#0000ff"
+        style="background:#0000ff; width:30px; height:30px; border:none; border-radius:50%; margin:5px;"></button>
+    </div>
+
   </div>
 
   <script type="importmap">
@@ -27,20 +36,31 @@
 
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    import { TubePainter } from 'three/addons/misc/TubePainter.js';
+    import { TubePainter } from './public/jsm/misc/TubePainter.js';
     import { XRButton } from 'three/addons/webxr/XRButton.js';
 
     let camera, scene, renderer;
     let controller1, controller2;
+    let currentColor = new THREE.Color(0xff0000);
 
     const cursor = new THREE.Vector3();
 
     let controls;
 
+    document.querySelectorAll(".color-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const color = btn.getAttribute("data-color");
+        currentColor.set(color);
+        console.log("Selected color:", currentColor, color);
+        init()
+      });
+    });
+
     init();
 
-    function init() {
 
+    function init() {
+      console.log('init');
       const container = document.createElement('div');
       document.body.appendChild(container);
 
@@ -67,10 +87,10 @@
 
       const painter1 = new TubePainter();
       scene.add(painter1.mesh);
-
+      painter1.setColor(currentColor);
       const painter2 = new TubePainter();
       scene.add(painter2.mesh);
-
+      painter2.setColor(currentColor);
       //
 
       renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -85,7 +105,7 @@
       // controllers
 
       function onSelectStart() {
-
+        console.log('select start');
         this.updateMatrixWorld(true);
 
         const pivot = this.getObjectByName('pivot');
