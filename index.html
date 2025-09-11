@@ -6,6 +6,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <link type="text/css" rel="stylesheet" href="main.css">
+  
 </head>
 
 <body>
@@ -38,7 +39,7 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { TubePainter } from './public/jsm/misc/TubePainter.js';
     import { XRButton } from 'three/addons/webxr/XRButton.js';
-
+    import { GUI } from 'lil-gui';
     let camera, scene, renderer;
     let controller1, controller2;
     let currentColor = new THREE.Color(0xff0000);
@@ -59,7 +60,6 @@
 
 
     function init() {
-      console.log('init');
       const container = document.createElement('div');
       document.body.appendChild(container);
 
@@ -86,11 +86,26 @@
 
       const painter1 = new TubePainter();
       scene.add(painter1.mesh);
-      painter1.setColor(currentColor);
       const painter2 = new TubePainter();
       scene.add(painter2.mesh);
-      painter2.setColor(currentColor);
       //
+
+      const gui = new GUI();
+
+      // Create color pickers for multiple color formats
+      const colorState = {
+        color: '#ff0000' // Cor inicial (vermelho)
+      };
+
+      painter1.setColor(colorState.color);
+      painter2.setColor(colorState.color);
+
+      gui.addColor(colorState, 'color')
+       .name('Cor do Pincel') // (Opcional) Dá um nome mais amigável
+       .onChange(function(newColorValue) {
+           painter1.setColor(newColorValue);
+           painter2.setColor(newColorValue);
+       });
 
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setPixelRatio(window.devicePixelRatio);
