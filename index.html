@@ -42,6 +42,8 @@
     import { GUI } from 'lil-gui';
     let camera, scene, renderer;
     let controller1, controller2;
+    let jsonVetor = new Array();
+    let tracoAtual = new Array();
     let currentColor = new THREE.Color(0xff0000);
 
     const cursor = new THREE.Vector3();
@@ -129,12 +131,17 @@
 
         this.userData.isSelecting = true;
 
+        tracoAtual.push(cursor);
       }
 
       function onSelectEnd() {
 
         this.userData.isSelecting = false;
+        console.log(tracoAtual);
 
+        let jsonPontos = JSON.stringify(tracoAtual);
+
+        console.log(jsonPontos);
       }
 
       function onSqueezeStart() {
@@ -195,6 +202,12 @@
     }
 
     //
+    function removeDuplicadosSeguidos(arr) {
+      return arr.filter((valor, index, array) => {
+        return index === 0 || valor !== array[index - 1];
+      });
+    }
+
 
     function handleController(controller) {
 
@@ -219,8 +232,15 @@
 
       if (userData.isSelecting === true) {
 
+        const last = tracoAtual[tracoAtual.length - 1];
+        // Só adiciona se for diferente do último ponto
+        if(last != cursor.clone()){
+          tracoAtual.push(cursor.clone());
+        }
+
         painter.lineTo(cursor);
         painter.update();
+
 
       }
 
