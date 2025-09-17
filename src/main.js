@@ -1,126 +1,221 @@
+
 import * as THREE from 'three';
-import { ARButton } from 'three/examples/jsm/webxr/ARButton.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { TubePainter } from '/public/jsm/misc/TubePainter.js'; // esse é relativo porque é seu
+import { XRButton } from 'three/examples/jsm/webxr/XRButton.js';
+import { GUI } from 'lil-gui';
 
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ alpha: true });
+    let camera, scene, renderer;
+    let controller1, controller2;
+    let jsonVetor = new Array();
+    let tracoAtual = new Array();
+    let currentColor = new THREE.Color(0xff0000);
 
-renderer.setClearAlpha(0);
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.xr.enabled = true;
+    const cursor = new THREE.Vector3();
 
-document.body.appendChild(renderer.domElement);
-document.body.appendChild(ARButton.createButton(renderer));
+    let controls;
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-scene.add(ambientLight);
+    document.querySelectorAll(".color-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const color = btn.getAttribute("data-color");
+        currentColor.set(color);
+        init()
+      });
+    });
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
-directionalLight.position.set(1, 1, 1);
-scene.add(directionalLight);
-
-//tentando usar raycast
-
-const raycaster = new THREE.Raycaster();
-
-// ###### SETUP DO CANVAS
-
-const canvas = document.getElementById("myCanvas");
-const ctx = canvas.getContext("2d");
-
-ctx.fillStyle = "red";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-ctx.fillStyle = "black";
-ctx.font = "48px Arial";
-ctx.fillText("Fala papai", 50, 100);
-
-const textura = new THREE.CanvasTexture(canvas);
-
-const g1 = new THREE.BoxGeometry(1, 1, 1);
-const mat = new THREE.MeshStandardMaterial({map: textura});
-const cubo = new THREE.Mesh(g1, mat);
-cubo.position.set(0.0, 0.0, -3.5);
-
-//scene.add(cubo);
+    init();
 
 
+    function init() {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x222222);
+
+      camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 50);
+      camera.position.set(0, 1.6, 3);
+
+      controls = new OrbitControls(camera, container);
+      controls.target.set(0, 1.6, 0);
+      controls.update();
+
+      const grid = new THREE.GridHelper(4, 1, 0x111111, 0x111111);
+      scene.add(grid);
+
+      scene.add(new THREE.HemisphereLight(0x888877, 0x777788, 3));
+
+      const light = new THREE.DirectionalLight(0xffffff, 1.5);
+      light.position.set(0, 4, 0);
+      scene.add(light);
+
+      //
+
+      const painter1 = new TubePainter();
+      scene.add(painter1.mesh);
+      const painter2 = new TubePainter();
+      scene.add(painter2.mesh);
+      //
+
+      const gui = new GUI();
+
+      // Create color pickers for multiple color formats
+      const colorState = {
+        color: '#ff0000' // Cor inicial (vermelho)
+      };
+
+      painter1.setColor(colorState.color);
+      painter2.setColor(colorState.color);
+
+      gui.addColor(colorState, 'color')
+       .name('Cor do Pincel') // (Opcional) Dá um nome mais amigável
+       .onChange(function(newColorValue) {
+           painter1.setColor(newColorValue);
+           painter2.setColor(newColorValue);
+       });
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setAnimationLoop(animate);
+      renderer.xr.enabled = true;
+      container.appendChild(renderer.domElement);
+
+      document.body.appendChild(XRButton.createButton(renderer));
+
+      // controllers
+
+      function onSelectStart() {
+        this.updateMatrixWorld(true);
+
+        const pivot = this.getObjectByName('pivot');
+        cursor.setFromMatrixPosition(pivot.matrixWorld);
+
+        const painter = this.userData.painter;
+        painter.moveTo(cursor);
+
+        this.userData.isSelecting = true;
+
+        tracoAtual.push(cursor);
+      }
+
+      function onSelectEnd() {
+
+        this.userData.isSelecting = false;
+        console.log(tracoAtual);
+
+        let jsonPontos = JSON.stringify(tracoAtual);
+
+        console.log(jsonPontos);
+      }
+
+      function onSqueezeStart() {
+
+        this.userData.isSqueezing = true;
+        this.userData.positionAtSqueezeStart = this.position.y;
+        this.userData.scaleAtSqueezeStart = this.scale.x;
+
+      }
+
+      function onSqueezeEnd() {
+
+        this.userData.isSqueezing = false;
+
+      }
+
+      controller1 = renderer.xr.getController(0);
+      controller1.addEventListener('selectstart', onSelectStart);
+      controller1.addEventListener('selectend', onSelectEnd);
+      controller1.addEventListener('squeezestart', onSqueezeStart);
+      controller1.addEventListener('squeezeend', onSqueezeEnd);
+      controller1.userData.painter = painter1;
+      scene.add(controller1);
+
+      controller2 = renderer.xr.getController(1);
+      controller2.addEventListener('selectstart', onSelectStart);
+      controller2.addEventListener('selectend', onSelectEnd);
+      controller2.addEventListener('squeezestart', onSqueezeStart);
+      controller2.addEventListener('squeezeend', onSqueezeEnd);
+      controller2.userData.painter = painter2;
+      scene.add(controller2);
+
+      //
+
+      const pivot = new THREE.Mesh(new THREE.IcosahedronGeometry(0.01, 3));
+      pivot.name = 'pivot';
+      pivot.position.z = - 0.05;
+
+      const group = new THREE.Group();
+      group.add(pivot);
+
+      controller1.add(group.clone());
+      controller2.add(group.clone());
+
+      //
+
+      window.addEventListener('resize', onWindowResize);
+
+    }
+
+    function onWindowResize() {
+
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+    }
+
+    //
+    function removeDuplicadosSeguidos(arr) {
+      return arr.filter((valor, index, array) => {
+        return index === 0 || valor !== array[index - 1];
+      });
+    }
 
 
+    function handleController(controller) {
 
-//####### SETUP DO CANVAS
+      controller.updateMatrixWorld(true);
 
+      const userData = controller.userData;
+      const painter = userData.painter;
 
+      const pivot = controller.getObjectByName('pivot');
 
+      if (userData.isSqueezing === true) {
 
-const loader = new GLTFLoader();
+        const delta = (controller.position.y - userData.positionAtSqueezeStart) * 5;
+        const scale = Math.max(0.1, userData.scaleAtSqueezeStart + delta);
 
-function checkIntersection(pointer)
-{
-  raycaster.setFromCamera(pointer, camera);
+        pivot.scale.setScalar(scale);
+        painter.setSize(scale);
 
-  const intersects = raycaster.intersectObjects(scene.children, true);
+      }
 
-  if (intersects.length > 0)
-  {
-    intersects[0].object.material.color.set(0xff0000);
-  }
-}
+      cursor.setFromMatrixPosition(pivot.matrixWorld);
 
+      if (userData.isSelecting === true) {
 
-renderer.domElement.addEventListener("click", (event) => {
+        const last = tracoAtual[tracoAtual.length - 1];
+        // Só adiciona se for diferente do último ponto
+        if(last != cursor.clone()){
+          tracoAtual.push(cursor.clone());
+        }
 
-  const x = (event.clientX / window.innerWidth) * 2 - 1;
-  const y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-  const pointer = new THREE.Vector2(x, y);
-
-  checkIntersection(pointer);
-})
-
-
-
-loader.load(
-  'bat.glb',
-  function (gltf) {
-    const bat = gltf.scene;
-
-    bat.position.set(0, -0.5, -1.5);
-    
-    bat.scale.set(0.5, 0.5, 0.5);
-    
-    bat.rotation.y = Math.PI + Math.PI / 2;
-    
-
-    scene.add(bat);
-  },
-  undefined,
-  function (error) {
-    console.error('An error happened while loading the model:', error);
-  }
-);
+        painter.lineTo(cursor);
+        painter.update();
 
 
-//tentando atualizar o canvas a cada 2seg
-setInterval(() => {
-  //ctx.fillStyle = `hsl(${Math.random() * 360}, 100%, 50%)`;
-  //ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
 
-  ctx.fillStyle = "white";
-  ctx.font = "60px Arial";
-  ctx.fillText("pega2", 50, 300);
+    }
 
-  textura.needsUpdate = true;
+    function animate() {
 
-}, 2000);
+      handleController(controller1);
+      handleController(controller2);
 
-renderer.setAnimationLoop(function () {
-  renderer.render(scene, camera);
-});
+      renderer.render(scene, camera);
 
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
+    }
