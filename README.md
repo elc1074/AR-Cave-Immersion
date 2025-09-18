@@ -3,6 +3,6 @@ Este projeto é uma aplicação web que proporciona uma experiência imersiva de
 
 Links para repositórios de testes:
 
-elc1074.github.io/AR-Cave-Immersion/
+https://elc1074.github.io/AR-Cave-Immersion/
 
 https://allequiz.github.io/computascript/
