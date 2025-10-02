@@ -76,7 +76,8 @@ async function loadExistingDrawings() {
 
             // (Opcional) Ignorando a cor por enquanto, conforme solicitado
             // painter1.setColor(new THREE.Color(drawing.cor || '#FFFFFF'));
-
+            painter1.setColor(new THREE.Color(drawing.cor || '#FFFFFF'));
+            painter2.setColor(new THREE.Color(drawing.cor || '#FFFFFF'));
             // 4. Converte os objetos simples {x, y, z} em instâncias de THREE.Vector3
             const vectorPoints = pointsArray.map(p => new THREE.Vector3(p.x, p.y, p.z));
 
@@ -171,12 +172,13 @@ function init() {
             return;
         }
         const jsonPontos = JSON.stringify(tracoAtual);
-        const corAtual = null;
+        const corAtual = colorState.color;
         const drawingData = {
             user_id: userId,
             dados: jsonPontos,
             cor: corAtual
         };
+        console.log(drawingData)
         try {
             const response = await fetch(`${API_URL}/drawings`, {
                 method: 'POST',
