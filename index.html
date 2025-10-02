@@ -2,171 +2,316 @@
 <html lang="en">
 
 <head>
-  <title>three.js xr - paint</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <link type="text/css" rel="stylesheet" href="main.css">
+    <title>three.js xr - paint</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link type="text/css" rel="stylesheet" href="main.css">
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #f2f2f2;
-    }
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f2f2f2;
+        }
 
-    /* Modal */
-    #modal {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-    }
+        #modal {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
 
-    #modal h2 {
-      margin-bottom: 15px;
-      font-size: 1.4em;
-    }
+        #modal-slider {
+            display: flex;
+            width: 200%; 
+            transition: transform 0.4s ease-in-out;
+        }
+        
+        .modal-panel {
+            width: 50%;
+            box-sizing: border-box;
+            padding: 0 30px; 
+        }
 
-    #modal button {
-      display: block;
-      width: 100%;
-      padding: 15px;
-      margin: 8px 0;
-      font-size: 1.1em;
-      cursor: pointer;
-      border: none;
-      border-radius: 8px;
-      background: #007bff;
-      color: white;
-      transition: background 0.3s;
-    }
+        #modal.view-content #modal-slider {
+            transform: translateX(-50%);
+        }
 
-    #modal button:hover {
-      background: #0056b3;
-    }
+        #modal h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            color: #333;
+        }
 
-    #sessionList {
-      list-style: none;
-      padding: 0;
-    }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
 
-    #sessionList li {
-      background: #eee;
-      margin: 5px 0;
-      padding: 12px;
-      border-radius: 6px;
-      cursor: pointer; /* Adicionado para indicar que é clicável */
-      transition: background 0.2s;
-    }
+        .btn-primary {
+            background: #007BFF;
+            color: white;
+        }
 
-    #sessionList li:hover {
-      background: #ddd; /* Efeito visual ao passar o mouse */
-    }
+        .btn-primary:hover {
+            background: #0056b3;
+        }
 
-    input[type="text"] {
-      width: 100%;
-      padding: 12px;
-      font-size: 1em;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-    }
-  </style>
+        .btn-secondary {
+            background: transparent;
+            border-color: red;
+            color: red;
+        }
+
+        .btn-secondary:hover {
+            background: darkred;
+            border-color: darkred;
+            color: white;
+        }
+
+        #sessionList {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 15px;
+        }
+
+        #sessionList li {
+            background: #eee;
+            margin: 5px 0;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #sessionList li:hover {
+            background: #ddd;
+        }
+
+        input[type="text"] {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 12px;
+            font-size: 1em;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        #popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #popup-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+            border-top: 5px solid #333;
+        }
+
+        #popup-box.success {
+            border-top-color: #28a745;
+        }
+
+        #popup-box.error {
+            border-top-color: #DC3545;
+        }
+
+        #popup-message {
+            font-size: 1.1em;
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        #popup-close {
+            padding: 12px 30px;
+            width: auto;
+            display: inline-block;
+        }
+
+
+        @media (max-width: 480px) {
+
+            /* Faz o modal principal ocupar a tela inteira */
+            #modal {
+                width: 100%;
+                height: 100%;
+                max-width: 100%;
+                border-radius: 0; /* Remove bordas arredondadas para o efeito de tela cheia */
+                box-shadow: none; /* Remove a sombra desnecessária em tela cheia */
+                padding: 20px;
+                display: flex; /* Melhora o alinhamento do conteúdo interno */
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            #modal-slider {
+                height: auto;
+            }
+
+            #modal h2 {
+                font-size: 1.2em;
+                margin-bottom: 25px; /* Aumenta um pouco o respiro abaixo do título */
+            }
+
+            .btn {
+                padding: 14px;
+                font-size: 1em; /* Reduz a fonte para caber mais conteúdo na tela */
+            }
+
+            #popup-box {
+                width: 90%; /* Mantém a largura relativa, que já funciona bem */
+            }
+        }
+
+    </style>
 </head>
 
 <body>
-  <div id="modal">
-    <h2>Menu</h2>
-    <button onclick="showCreate()">Criar Sessão</button>
-    <button onclick="showList()">Listar Sessões</button>
-    <div id="content"></div>
-  </div>
+    <div id="modal">
+        <div id="modal-slider">
+            <div class="modal-panel" id="main-menu-panel">
+                <h2>Menu</h2>
+                <button class="btn btn-primary" onclick="showView('create')">Criar Sessão</button>
+                <button class="btn btn-primary" onclick="showView('list')">Listar Sessões</button>
+            </div>
+            <div class="modal-panel" id="content-panel">
+            </div>
+        </div>
+    </div>
 
-  <script>
-    const API_URL = 'http://localhost:3000';
+    <div id="popup-overlay">
+        <div id="popup-box">
+            <p id="popup-message"></p>
+            <button id="popup-close" class="btn btn-primary">OK</button>
+        </div>
+    </div>
 
-    function showCreate() {
-      document.getElementById('content').innerHTML = `
-        <h2>Criar Sessão</h2>
-        <input id="sessionName" type="text" placeholder="Nome da sessão">
-        <button onclick="saveSession()">Salvar</button>
-        <button onclick="resetMenu()">Voltar</button>
-      `;
-    }
+    <script>
+        const API_URL = 'http://localhost:3000';
+        const modal = document.getElementById('modal');
+        const contentPanel = document.getElementById('content-panel');
 
-    async function saveSession() {
-      let name = document.getElementById('sessionName').value.trim();
-      if (!name) {
-        alert('Digite um nome para a sessão!');
-        return;
-      }
+        const popupOverlay = document.getElementById('popup-overlay');
+        const popupBox = document.getElementById('popup-box');
+        const popupMessage = document.getElementById('popup-message');
+        const popupCloseBtn = document.getElementById('popup-close');
 
-      try {
-        let response = await fetch(`${API_URL}/users`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name })
-        });
-
-        if (!response.ok) throw new Error("Erro ao salvar no servidor");
-
-        let data = await response.json();
-        console.log("Usuário salvo:", data);
-
-        alert("Sessão salva no banco!");
-        showList();
-      } catch (err) {
-        console.error(err);
-        alert("Erro ao salvar sessão!");
-      }
-    }
-
-    async function showList() {
-      try {
-        let response = await fetch(`${API_URL}/users`);
-        let data = await response.json();
-        let users = data.value;
-
-        let listHTML = '<h2>Lista de Sessões</h2><ul id="sessionList">';
-        if (users.length === 0) {
-          listHTML += '<li>Nenhuma sessão criada</li>';
-        } else {
-          users.forEach(u => {
-            listHTML += `<li onclick="selectSession('${u.id}')">${u.name}</li>`;
-          });
+        function showPopup(message, type = 'error') {
+            popupMessage.textContent = message;
+            popupBox.classList.remove('success', 'error');
+            popupBox.classList.add(type);
+            popupOverlay.style.display = 'flex';
         }
-        listHTML += '</ul><button onclick="resetMenu()">Voltar</button>';
-        document.getElementById('content').innerHTML = listHTML;
-      } catch (err) {
-        console.error(err);
-        alert("Erro ao buscar sessões!");
-      }
-    }
+        function hidePopup() { popupOverlay.style.display = 'none'; }
+        popupCloseBtn.addEventListener('click', hidePopup);
+        popupOverlay.addEventListener('click', (event) => { if (event.target === popupOverlay) hidePopup(); });
+        
+        async function showView(viewName) {
+            if (viewName === 'create') {
+                contentPanel.innerHTML = `
+                    <h2>Criar Sessão</h2>
+                    <input id="sessionName" type="text" placeholder="Nome da sessão">
+                    <button class="btn btn-primary" onclick="saveSession()">Salvar</button>
+                    <button class="btn btn-secondary" onclick="resetView()">Voltar</button>
+                `;
+            } 
+            else if (viewName === 'list') {
+                try {
+                    contentPanel.innerHTML = `<p>Carregando sessões...</p>`;
+                    let response = await fetch(`${API_URL}/users`);
+                    let data = await response.json();
+                    let users = data.value;
 
-    function resetMenu() {
-      document.getElementById('content').innerHTML = '';
-    }
+                    let listHTML = '<h2>Lista de Sessões</h2><ul id="sessionList">';
+                    if (users.length === 0) {
+                        listHTML += '<li>Nenhuma sessão criada</li>';
+                    } else {
+                        users.forEach(u => {
+                            listHTML += `<li onclick="selectSession('${u.id}')">${u.name}</li>`;
+                        });
+                    }
+                    listHTML += `</ul><button class="btn btn-secondary" onclick="resetView()">Voltar</button>`;
+                    contentPanel.innerHTML = listHTML;
 
-    function selectSession(sessionId) {
-      sessionStorage.setItem('selectedSessionId', sessionId);
-      console.log(`Sessão selecionada: ${sessionId}`);
+                } catch (err) {
+                    console.error(err);
+                    showPopup("Erro ao buscar sessões!", 'error');
+                    resetView(); 
+                }
+            }
+            modal.classList.add('view-content');
+        }
 
-      document.getElementById('modal').style.display = 'none';
+        function resetView() {
+            modal.classList.remove('view-content');
+        }
+        
+        async function saveSession() {
+            let name = document.getElementById('sessionName').value.trim();
+            if (!name) {
+                showPopup('Digite um nome para a sessão!', 'error');
+                return;
+            }
+            try {
+                let response = await fetch(`${API_URL}/users`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name })
+                });
+                if (!response.ok) throw new Error("Erro ao salvar no servidor");
 
-      const script = document.createElement('script');
-      script.type = 'module';
-      script.src = './src/main.js';
-      document.body.appendChild(script);
-    }
-  </script>
+                showPopup("Sessão salva no banco!", 'success');
+                showView('list');
+            } catch (err) {
+                console.error(err);
+                showPopup("Erro ao salvar sessão!", 'error');
+            }
+        }
+
+        function selectSession(sessionId) {
+            sessionStorage.setItem('selectedSessionId', sessionId);
+            console.log(`Sessão selecionada: ${sessionId}`);
+            document.getElementById('modal').style.display = 'none';
+            document.getElementById('popup-overlay').style.display = 'none';
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.src = './src/main.js';
+            document.body.appendChild(script);
+        }
+    </script>
 
 </body>
-
 </html>
