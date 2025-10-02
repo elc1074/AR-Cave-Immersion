@@ -5,26 +5,167 @@
   <title>three.js xr - paint</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <link type="text/css" rel="stylesheet">
-  
+  <link type="text/css" rel="stylesheet" href="main.css">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #f2f2f2;
+    }
+
+    /* Modal */
+    #modal {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    #modal h2 {
+      margin-bottom: 15px;
+      font-size: 1.4em;
+    }
+
+    #modal button {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      margin: 8px 0;
+      font-size: 1.1em;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background: #007bff;
+      color: white;
+      transition: background 0.3s;
+    }
+
+    #modal button:hover {
+      background: #0056b3;
+    }
+
+    #sessionList {
+      list-style: none;
+      padding: 0;
+    }
+
+    #sessionList li {
+      background: #eee;
+      margin: 5px 0;
+      padding: 12px;
+      border-radius: 6px;
+      cursor: pointer; /* Adicionado para indicar que é clicável */
+      transition: background 0.2s;
+    }
+
+    #sessionList li:hover {
+      background: #ddd; /* Efeito visual ao passar o mouse */
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      font-size: 1em;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+  </style>
 </head>
 
 <body>
-
-  <div id="info">
-    <!-- <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> xr - paint -->
-    <!-- <div id="color-picker" style="position: absolute; top: 10px; right: 10px; z-index: 10;">
-      <button class="color-btn" data-color="#ff0000"
-        style="background:#ff0000; width:30px; height:30px; border:none; border-radius:50%; margin:5px;"></button>
-      <button class="color-btn" data-color="#00ff00"
-        style="background:#00ff00; width:30px; height:30px; border:none; border-radius:50%; margin:5px;"></button>
-      <button class="color-btn" data-color="#0000ff"
-        style="background:#0000ff; width:30px; height:30px; border:none; border-radius:50%; margin:5px;"></button>
-    </div> -->
-
+  <div id="modal">
+    <h2>Menu</h2>
+    <button onclick="showCreate()">Criar Sessão</button>
+    <button onclick="showList()">Listar Sessões</button>
+    <div id="content"></div>
   </div>
 
-<script type="module" src="./src/main.js"></script>
+  <script>
+    const API_URL = 'http://localhost:3000';
+
+    function showCreate() {
+      document.getElementById('content').innerHTML = `
+        <h2>Criar Sessão</h2>
+        <input id="sessionName" type="text" placeholder="Nome da sessão">
+        <button onclick="saveSession()">Salvar</button>
+        <button onclick="resetMenu()">Voltar</button>
+      `;
+    }
+
+    async function saveSession() {
+      let name = document.getElementById('sessionName').value.trim();
+      if (!name) {
+        alert('Digite um nome para a sessão!');
+        return;
+      }
+
+      try {
+        let response = await fetch(`${API_URL}/users`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name })
+        });
+
+        if (!response.ok) throw new Error("Erro ao salvar no servidor");
+
+        let data = await response.json();
+        console.log("Usuário salvo:", data);
+
+        alert("Sessão salva no banco!");
+        showList();
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao salvar sessão!");
+      }
+    }
+
+    async function showList() {
+      try {
+        let response = await fetch(`${API_URL}/users`);
+        let data = await response.json();
+        let users = data.value;
+
+        let listHTML = '<h2>Lista de Sessões</h2><ul id="sessionList">';
+        if (users.length === 0) {
+          listHTML += '<li>Nenhuma sessão criada</li>';
+        } else {
+          users.forEach(u => {
+            listHTML += `<li onclick="selectSession('${u.id}')">${u.name}</li>`;
+          });
+        }
+        listHTML += '</ul><button onclick="resetMenu()">Voltar</button>';
+        document.getElementById('content').innerHTML = listHTML;
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao buscar sessões!");
+      }
+    }
+
+    function resetMenu() {
+      document.getElementById('content').innerHTML = '';
+    }
+
+    function selectSession(sessionId) {
+      sessionStorage.setItem('selectedSessionId', sessionId);
+      console.log(`Sessão selecionada: ${sessionId}`);
+
+      document.getElementById('modal').style.display = 'none';
+
+      const script = document.createElement('script');
+      script.type = 'module';
+      script.src = './src/main.js';
+      document.body.appendChild(script);
+    }
+  </script>
 
 </body>
 
