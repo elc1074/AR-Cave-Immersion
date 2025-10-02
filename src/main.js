@@ -198,7 +198,6 @@ import { GUI } from 'lil-gui';
       if (userData.isSelecting === true) {
 
         const last = tracoAtual[tracoAtual.length - 1];
-        // Só adiciona se for diferente do último ponto
         if(last != cursor.clone()){
           tracoAtual.push(cursor.clone());
         }
