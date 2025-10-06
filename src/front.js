@@ -1,4 +1,4 @@
-    const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+    const API_URL = import.meta.env.VITE_API_URL ?? 'https://ar-cave-immersionar-api.onrender.com/';
 
         const modal = document.getElementById('modal');
         const contentPanel = document.getElementById('content-panel');
