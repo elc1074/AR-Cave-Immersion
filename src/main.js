@@ -4,7 +4,7 @@ import { TubePainter } from '/public/jsm/misc/TubePainter.js';
 import { XRButton } from 'three/examples/jsm/webxr/XRButton.js';
 import { GUI } from 'lil-gui';
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'https://ar-cave-immersionar-api.onrender.com/';
+const API_URL = import.meta.env.VITE_API_URL ?? 'https://ar-cave-immersionar-api.onrender.com';
 
 function getSessionId() {
     const userIdString = sessionStorage.getItem('selectedSessionId');
