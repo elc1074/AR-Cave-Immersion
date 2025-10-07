@@ -6,6 +6,12 @@ import { GUI } from 'lil-gui';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'https://ar-cave-immersionar-api.onrender.com';
 
+let scene, camera, renderer, controls;
+let controller1, controller2;
+let painter1, painter2;
+let tracoAtual = [];
+const cursor = new THREE.Vector3();
+
 function getSessionId() {
     const userIdString = sessionStorage.getItem('selectedSessionId');
     if (!userIdString) {
@@ -21,19 +27,6 @@ function getSessionId() {
     return userId;
 }
 
-
-let camera, scene, renderer;
-let controller1, controller2;
-let tracoAtual = [];
-let painter1, painter2;
-
-const cursor = new THREE.Vector3();
-
-let controls;
-
-init();
-
-// <-- NOVO: Função para carregar desenhos existentes do banco de dados -->
 async function loadExistingDrawings() {
     const userId = getSessionId();
     if (!userId) {
@@ -42,54 +35,43 @@ async function loadExistingDrawings() {
     }
 
     try {
-        // 1. Busca no backend todos os desenhos associados ao user_id
         const response = await fetch(`${API_URL}/drawings/user/${userId}`);
         if (!response.ok) {
             throw new Error('Falha ao buscar desenhos existentes.');
         }
 
         let drawings = await response.json();
-        drawings = drawings.value
+        drawings = drawings.value;
         console.log('Desenhos carregados do servidor:', drawings);
+
         if (drawings.length === 0) {
             console.log('Nenhum desenho anterior encontrado para este usuário.');
             return;
         }
-        // console.log(`Carregando ${drawings.length} desenhos...`);
-        // 2. Itera sobre cada desenho retornado
+
         drawings.forEach(drawing => {
-            // 3. Converte a coluna 'dados' (que é um JSON string) de volta para um array
-            // O JSON.parse pode falhar se os dados estiverem malformados
             let pointsArray;
             try {
                 pointsArray = JSON.parse(drawing.dados);
-            } catch(e) {
+            } catch (e) {
                 console.error("Erro ao parsear dados do desenho:", drawing.dados, e);
-                return; // Pula para o próximo desenho
+                return;
             }
 
-
-            // Verifica se o array tem pontos suficientes para formar uma linha
             if (!pointsArray || pointsArray.length < 2) {
-                return; // Pula para o próximo desenho
+                return;
             }
 
-            // (Opcional) Ignorando a cor por enquanto, conforme solicitado
-            // painter1.setColor(new THREE.Color(drawing.cor || '#FFFFFF'));
-            painter1.setColor(new THREE.Color(drawing.cor || '#FFFFFF'));
-            painter2.setColor(new THREE.Color(drawing.cor || '#FFFFFF'));
-            // 4. Converte os objetos simples {x, y, z} em instâncias de THREE.Vector3
+            const color = new THREE.Color(drawing.cor || '#FFFFFF');
+            painter1.setColor(color);
+            painter2.setColor(color);
+            
             const vectorPoints = pointsArray.map(p => new THREE.Vector3(p.x, p.y, p.z));
-
-            // 5. Usa o painter para desenhar a linha
-            painter1.moveTo(vectorPoints[0]); // Move para o primeiro ponto
-
-            // Começa o loop do segundo ponto em diante
+            
+            painter1.moveTo(vectorPoints[0]);
             for (let i = 1; i < vectorPoints.length; i++) {
                 painter1.lineTo(vectorPoints[i]);
             }
-
-            // 6. Atualiza a malha do painter para tornar o traço visível
             painter1.update();
         });
 
@@ -97,7 +79,6 @@ async function loadExistingDrawings() {
         console.error('Erro ao carregar desenhos existentes:', error);
     }
 }
-
 
 function init() {
     const container = document.createElement('div');
@@ -139,7 +120,7 @@ function init() {
             painter2.setColor(newColor);
         });
 
-    renderer = new THREE.WebGLRenderer({ antalias: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setAnimationLoop(animate);
@@ -148,7 +129,6 @@ function init() {
 
     document.body.appendChild(XRButton.createButton(renderer));
 
-    // controllers
     function onSelectStart() {
         this.updateMatrixWorld(true);
         const pivot = this.getObjectByName('pivot');
@@ -178,7 +158,7 @@ function init() {
             dados: jsonPontos,
             cor: corAtual
         };
-        console.log(drawingData)
+        
         try {
             const response = await fetch(`${API_URL}/drawings`, {
                 method: 'POST',
@@ -233,9 +213,6 @@ function init() {
     controller2.add(group.clone());
 
     window.addEventListener('resize', onWindowResize);
-
-    // <-- MUDANÇA: Chama a função para carregar os desenhos após tudo ser inicializado -->
-    loadExistingDrawings();
 }
 
 function onWindowResize() {
@@ -267,3 +244,9 @@ function animate() {
     handleController(controller2);
     renderer.render(scene, camera);
 }
+
+window.iniciarExperienciaAR = (sessionId) => {
+    console.log(`Iniciando a experiência de AR para a sessão: ${sessionId}`);
+    init();
+    loadExistingDrawings();
+};
