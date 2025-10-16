@@ -1,0 +1,291 @@
+/* ======================================================= */
+/* 1. CONFIGURAÇÕES GLOBAIS E VARIÁVEIS DE COR             */
+/* ======================================================= */
+:root {
+    --cor-vermelha: #BF092F;
+    --cor-azul-escuro: #132440;
+    --cor-azul: #16476A;
+    --cor-teal: #3B9797;
+    --cor-branco: #ffffff;
+    --cor-texto-claro: #f0f0f0;
+}
+
+body {
+    font-family: 'Exo 2', sans-serif;
+    margin: 0;
+    height: 100vh;
+    width: 100vw;
+    background: var(--cor-azul-escuro);
+    color: var(--cor-texto-claro);
+    overflow-x: hidden; 
+}
+
+/* ======================================================= */
+/* 2. TELA DE CARREGAMENTO E LOGO                          */
+/* ======================================================= */
+#loadingScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--cor-azul-escuro);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.8s ease-out, visibility 0s 0.8s;
+    opacity: 1;
+    visibility: visible;
+}
+
+#loadingScreen.loading-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none; 
+}
+
+#logo-animada {
+    width: 40%;
+    max-width: 200px;
+    height: auto;
+    
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.5s ease-in, transform 0.5s ease-in;
+}
+
+#logo-animada.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+
+#sidebar, #main-content, .fab-container {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.5s ease-in 0.5s;
+    touch-action: pan-y; 
+}
+
+/* ======================================================= */
+/* 3. AVISO PARA DESKTOP                                   */
+/* ======================================================= */
+#desktop-warning {
+    display: none; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(19, 36, 64, 0.97);
+    z-index: 10000;
+    color: var(--cor-texto-claro);
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+}
+
+.warning-box button { margin-top: 20px; }
+.warning-box {
+    max-width: 500px;
+}
+
+.warning-box h2 {
+    font-size: 1.8em;
+    font-family: 'Cinzel', serif;
+    margin-bottom: 15px;
+}
+
+.warning-box p {
+    font-size: 1.1em;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+/* ======================================================= */
+/* 4. SIDEBAR DESLIZANTE E OVERLAY                         */
+/* ======================================================= */
+#sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    background: var(--cor-azul);
+    padding: 20px;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%); 
+    transition: transform 0.4s ease-in-out;
+}
+
+#sidebar.open {
+    transform: translateX(0); 
+}
+
+#sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, visibility 0s 0.4s;
+}
+
+#sidebar-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.4s ease;
+}
+
+#sidebar h2 {
+    font-family: 'Cinzel', serif;
+    margin: 0 0 20px 0;
+    text-align: center;
+    color: var(--cor-branco);
+}
+
+#main-content {
+    width: 100%;
+    padding: 20px;
+    overflow-y: auto;
+    height: 100vh;
+    box-sizing: border-box;
+    transition: filter 0.4s ease;
+}
+
+body.sidebar-active #main-content,
+body.sidebar-active .fab-container {
+    filter: blur(4px) brightness(0.7);
+    pointer-events: none;
+}
+
+.main-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.menu-button {
+    background: var(--cor-azul);
+    color: var(--cor-branco);
+    border: none;
+    border-radius: 8px;
+    width: 45px;
+    height: 45px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: background-color 0.3s;
+    z-index: 50; 
+    padding: 8px; 
+    box-sizing: border-box; 
+}
+
+.menu-button:hover {
+    background: var(--cor-azul-escuro);
+}
+
+.menu-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; 
+}
+
+.main-header h1 {
+    font-family: 'Cinzel', serif;
+    margin: 0;
+    font-size: 1.5em;
+}
+
+
+/* Botão Flutuante (FAB) */
+.fab-container { position: fixed; bottom: 30px; right: 30px; z-index: 1000; }
+.fab-main-button { width: 60px; height: 60px; border-radius: 50%; background: var(--cor-branco); color: black; font-size: 24px; border: none; box-shadow: 0 4px 8px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.3s ease; }
+.fab-main-button:hover { transform: scale(1.1); }
+.fab-options { position: absolute; bottom: 70px; right: 0; display: flex; flex-direction: column; align-items: flex-end; visibility: hidden; opacity: 0; transition: visibility 0s 0.3s, opacity 0.3s ease; }
+.fab-container.active .fab-options { visibility: visible; opacity: 1; transition: opacity 0.3s ease; }
+.fab-option { 
+    background: #3B9797; 
+    color: white; 
+    padding: 8px 12px; 
+    border-radius: 5px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Modal */
+#modal { background: #16476A; padding: 20px 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); width: 90%; max-width: 400px; text-align: center; overflow: hidden; display: none; transition: all 0.3s ease; }
+#modal-slider { display: flex; width: 200%; transition: transform 0.4s ease-in-out; }
+.modal-panel { width: 50%; box-sizing: border-box; padding: 0 30px; }
+#modal.view-content #modal-slider { transform: translateX(-50%); }
+#modal h2 { 
+    font-family: 'Cinzel', serif;
+    margin-top: 0; margin-bottom: 20px; font-size: 1.4em; color: #f0f0f0; 
+}
+
+/* Botões e Inputs */
+.btn { display: block; width: 100%; padding: 15px; margin: 10px 0; font-size: 1.1em; font-weight: bold; cursor: pointer; border-radius: 8px; border: 2px solid transparent; transition: all 0.3s ease; }
+.btn-primary { background: #3B9797; color: white; }
+.btn-primary:hover { background: #328282; }
+.btn-secondary { background: transparent; border-color: red; color: red; }
+.btn-secondary:hover { background: darkred; border-color: darkred; color: white; }
+#sidebar .btn { background: #3B9797; color: white; text-align: left; transition: all 0.3s ease, filter 0.2s ease-in-out; }
+
+/* Efeito de hover que funciona com cores dinâmicas */
+.fab-option, #sidebar .btn:hover {
+    filter: brightness(85%);
+}
+.fab-option { transition: filter 0.2s ease-in-out; }
+
+#sessionList { list-style: none; padding: 0; margin-bottom: 15px; }
+#sessionList li { background: #132440; margin: 5px 0; padding: 12px; border-radius: 6px; cursor: pointer; transition: background 0.2s; color: #f0f0f0; }
+#sessionList li:hover { background: #328282; }
+input[type="text"] { box-sizing: border-box; width: 100%; padding: 12px; font-size: 1em; margin-bottom: 10px; border: 1px solid #3B9797; border-radius: 6px; background-color: #f0f0f0; color: #333; }
+
+/* Popup */
+#popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 1000; display: none; justify-content: center; align-items: center; }
+#popup-box { background: #16476A; padding: 25px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); width: 90%; max-width: 350px; text-align: center; border-top: 5px solid #BF092F; }
+#popup-box.success { border-top-color: #28a745; }
+#popup-box.error { border-top-color: #DC3545; }
+#popup-message { font-size: 1.1em; margin-top: 0; margin-bottom: 20px; color: #f0f0f0; }
+#popup-close { padding: 12px 30px; width: auto; display: inline-block; }
+
+/* ======================================================= */
+/* 7. MEDIA QUERIES PARA RESPONSIVIDADE                    */
+/* ======================================================= */
+
+/* Ajustes para telas de tablet */
+@media (max-width: 768px) {
+    #sidebar {
+        width: 260px;
+    }
+}
+
+/* Ajustes para telas de celular */
+@media (max-width: 480px) {
+    #main-content {
+        padding:  12px;
+    }
+    .main-header h1 {
+        font-size: 1.2em;
+    }
+    #modal h2 {
+        font-size: 1.2em;
+        margin-bottom: 25px;
+    }
+    .btn {
+        padding: 14px;
+        font-size: 1em;
+    }
+}
