@@ -15,6 +15,8 @@
   },
   "dependencies": {
     "dotenv": "^17.2.3",
-    "three": "^0.179.1"
+    "three": "^0.179.1",
+    "y-websocket": "^3.0.0",
+    "yjs": "^13.6.27"
   }
 }
