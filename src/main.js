@@ -82,6 +82,7 @@ async function loadExistingDrawings() {
 
 function init() {
     const container = document.createElement('div');
+    const sessionInit = { optionalFeatures: ['anchors', 'hit-test', 'local-floor'] };
     document.body.appendChild(container);
 
     scene = new THREE.Scene();
@@ -129,7 +130,7 @@ function init() {
 
     document.body.appendChild(XRButton.createButton(renderer));
 
-    function onSelectStart() {
+    async function onSelectStart() {
         this.updateMatrixWorld(true);
         const pivot = this.getObjectByName('pivot');
         cursor.setFromMatrixPosition(pivot.matrixWorld);
@@ -137,6 +138,21 @@ function init() {
         painter.moveTo(cursor);
         this.userData.isSelecting = true;
         tracoAtual = [cursor.clone()];
+
+        const xrFrame = renderer.xr.getFrame();
+        const referenceSpace = renderer.xr.getReferenceSpace();
+        if (xrFrame && referenceSpace) {
+            try {
+                const anchor = await xrFrame.createAnchor(
+                    new XRRigidTransform(cursor),
+                    referenceSpace
+                );
+                console.log('ancora criada');
+                this.userData.anchor = anchor;
+            } catch (e) {
+                console.warn('não foi possível criar âncora:', e);
+            }
+        }
     }
 
     async function onSelectEnd() {
