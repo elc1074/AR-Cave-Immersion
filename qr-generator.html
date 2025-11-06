@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator - AR Cave Immersion</title>
+    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs@gh-pages/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: linear-gradient(135deg, #1e1e2e, #2d2d4a);
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: rgba(50, 50, 70, 0.95);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        
+        h1 {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0 2rem 0;
+            font-size: 1.8rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-family: 'Exo 2', monospace;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .qr-container {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        #qrcode {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .preset-btn {
+            background: rgba(102, 126, 234, 0.3);
+            color: white;
+            border: 1px solid rgba(102, 126, 234, 0.5);
+            padding: 0.6rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .preset-btn:hover {
+            background: rgba(102, 126, 234, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .info-box {
+            background: rgba(102, 126, 234, 0.15);
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Gerador de QR Code</h1>
+        <h3 style="text-align: center; color: rgba(255, 255, 255, 0.7); margin-top: 0;">AR Cave Immersion - Autenticação</h3>
+        
+        <div class="info-box">
+            <strong>ℹ️ Como usar:</strong><br>
+            1. Escolha um preset ou personalize os dados<br>
+            2. Clique em "Gerar QR Code"<br>
+            3. Use seu celular para escanear o código na aplicação
+        </div>
+        
+        <div class="preset-buttons">
+            <button class="preset-btn" onclick="setPreset('default')">📱 Padrão</button>
+            <button class="preset-btn" onclick="setPreset('admin')">👨‍💼 Admin</button>
+            <button class="preset-btn" onclick="setPreset('guest')">👤 Guest</button>
+            <button class="preset-btn" onclick="setPreset('test')">🧪 Teste</button>
+        </div>
+        
+        <div class="form-group">
+            <label for="qrContent">Dados do QR Code (JSON ou texto):</label>
+            <textarea id="qrContent" rows="5" placeholder='{"token": "seu-token-aqui"}'>{"token": "ar-cave-auth-2025"}</textarea>
+        </div>
+        
+        <button onclick="generateQR()">✨ Gerar QR Code</button>
+        
+        <div id="qrContainer" class="qr-container" style="display: none;">
+            <p style="margin: 0 0 1rem 0; color: rgba(255, 255, 255, 0.7);">📸 Escaneie este código:</p>
+            <div id="qrcode"></div>
+            <p id="qrData" style="margin: 1rem 0 0 0; font-size: 0.85rem; color: rgba(255, 255, 255, 0.6); word-break: break-all;"></p>
+        </div>
+    </div>
+    
+    <script>
+        function setPreset(type) {
+            const presets = {
+                default: JSON.stringify({
+                    token: "ar-cave-auth-2025",
+                    user: "test-user",
+                    timestamp: new Date().toISOString()
+                }, null, 2),
+                admin: JSON.stringify({
+                    token: "admin-token-2025",
+                    role: "admin",
+                    permissions: ["read", "write", "delete"],
+                    timestamp: new Date().toISOString()
+                }, null, 2),
+                guest: JSON.stringify({
+                    token: "guest-token-2025",
+                    role: "guest",
+                    permissions: ["read"],
+                    timestamp: new Date().toISOString()
+                }, null, 2),
+                test: "test-token-simple-123"
+            };
+            
+            document.getElementById('qrContent').value = presets[type];
+            generateQR();
+        }
+        
+        function generateQR() {
+            const content = document.getElementById('qrContent').value.trim();
+            
+            if (!content) {
+                alert('Por favor, insira dados para o QR code!');
+                return;
+            }
+            
+            // Limpa QR anterior
+            document.getElementById('qrcode').innerHTML = '';
+            
+            // Cria novo QR
+            try {
+                new QRCode(document.getElementById('qrcode'), {
+                    text: content,
+                    width: 300,
+                    height: 300,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                document.getElementById('qrData').textContent = `Dados: ${content}`;
+                document.getElementById('qrContainer').style.display = 'block';
+                
+                console.log('✅ QR Code gerado:', content);
+            } catch (error) {
+                alert('Erro ao gerar QR code: ' + error.message);
+            }
+        }
+        
+        window.addEventListener('load', () => {
+            setPreset('default');
+        });
+    </script>
+</body>
+</html>
