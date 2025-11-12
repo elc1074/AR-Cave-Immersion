@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start:server": "node server/websocketServer.cjs"
   },
   "devDependencies": {
     "@vitejs/plugin-basic-ssl": "^2.1.0",
@@ -14,8 +15,10 @@
     "vite": "^7.1.2"
   },
   "dependencies": {
+    "@y/websocket-server": "^0.1.1",
     "dotenv": "^17.2.3",
     "three": "^0.179.1",
+    "ws": "^8.18.3",
     "y-websocket": "^3.0.0",
     "yjs": "^13.6.27"
   }

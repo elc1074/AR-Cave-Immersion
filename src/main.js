@@ -3,6 +3,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { TubePainter } from '/public/jsm/misc/TubePainter.js';
 import { XRButton } from 'three/examples/jsm/webxr/XRButton.js';
 import { GUI } from 'lil-gui';
+import * as Y from 'yjs';
+import { WebsocketProvider } from 'y-websocket';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'https://ar-cave-immersionar-api.onrender.com';
 
@@ -10,6 +12,7 @@ let scene, camera, renderer, controls;
 let controller1, controller2;
 let painter1, painter2;
 let tracoAtual = [];
+let yDoc, wsProvider, yStrokes;
 const cursor = new THREE.Vector3();
 
 function getSessionId() {
@@ -213,6 +216,72 @@ function init() {
     controller2.add(group.clone());
 
     window.addEventListener('resize', onWindowResize);
+
+    yDoc = new Y.Doc()
+    wsProvider = new WebsocketProvider(
+        'ws://localhost:1234',
+        sessionStorage.getItem('selectedSessionId'),
+        yDoc
+    )
+    yStrokes = yDoc.getArray('strokes')
+
+    // Observar mudanças nos traços
+    yStrokes.observe(event => {
+        event.changes.added.forEach(item => {
+            const stroke = item.content.getContent()
+            replayStroke(stroke)
+        })
+    })
+}
+
+function replayStroke(stroke) {
+    const { points, color } = stroke
+    painter1.setColor(new THREE.Color(color))
+    painter1.moveTo(new THREE.Vector3(points[0].x, points[0].y, points[0].z))
+    
+    for (let i = 1; i < points.length; i++) {
+        const point = points[i]
+        painter1.lineTo(new THREE.Vector3(point.x, point.y, point.z))
+    }
+    painter1.update()
+}
+
+function onSelectEnd() {
+    this.userData.isSelecting = false;
+    
+    if (tracoAtual.length < 2) {
+        tracoAtual = [];
+        return;
+    }
+
+    // Adicionar o traço ao Y.js
+    const stroke = {
+        points: tracoAtual.map(p => ({x: p.x, y: p.y, z: p.z})),
+        color: colorState.color,
+        timestamp: Date.now()
+    }
+    
+    yStrokes.push([stroke])
+
+    // Manter o salvamento no seu banco de dados atual
+    const userId = getSessionId();
+    if (userId) {
+        const drawingData = {
+            user_id: userId,
+            dados: JSON.stringify(tracoAtual),
+            cor: colorState.color
+        };
+        
+        fetch(`${API_URL}/drawings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(drawingData),
+        }).catch(error => {
+            console.error('Erro ao salvar o desenho:', error);
+        });
+    }
+
+    tracoAtual = [];
 }
 
 function onWindowResize() {
