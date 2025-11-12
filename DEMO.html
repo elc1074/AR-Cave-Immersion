@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demonstração - Autenticação QR Code</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Exo 2', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e, #2d2d4a);
+            color: #fff;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 2rem;
+            font-size: 2.2rem;
+        }
+        
+        .stages {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .stage {
+            background: rgba(50, 50, 70, 0.8);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stage::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        .stage-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        .stage h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #a0aec0;
+        }
+        
+        .stage-content {
+            min-height: 150px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            border: 1px dashed rgba(102, 126, 234, 0.2);
+        }
+        
+        .menu-visibility {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .status {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        .visible {
+            background: rgba(81, 207, 102, 0.2);
+            color: #51cf66;
+            border: 1px solid rgba(81, 207, 102, 0.5);
+        }
+        
+        .hidden {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, 0.5);
+        }
+        
+        .files-section {
+            background: rgba(50, 50, 70, 0.8);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .files-section h2 {
+            color: #a0aec0;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .file-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .file-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .file-name {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            font-family: monospace;
+        }
+        
+        .file-desc {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .quick-start {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .quick-start h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        .quick-start ol {
+            margin-left: 1.5rem;
+            line-height: 2;
+        }
+        
+        .quick-start li {
+            margin-bottom: 0.5rem;
+        }
+        
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .url-box {
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 3px solid #667eea;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .badge-new {
+            background: rgba(81, 207, 102, 0.2);
+            color: #51cf66;
+            border: 1px solid #51cf66;
+        }
+        
+        .badge-modified {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 1px solid #ffc107;
+        }
+        
+        .badge-generated {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            border: 1px solid #667eea;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(102, 126, 234, 0.2);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>🔐 Autenticação com QR Code - Demonstração Visual</h1>
+        
+        <div class="stages">
+            <div class="stage">
+                <div class="stage-number">1</div>
+                <h3>⏳ Carregamento</h3>
+                <div class="stage-content">
+                    <p>Aplicação inicia com tela de loading por 3 segundos</p>
+                    <div class="menu-visibility">
+                        <span class="status hidden">Menu: OCULTO ❌</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="stage-number">2</div>
+                <h3>🔐 Autenticação</h3>
+                <div class="stage-content">
+                    <p>Tela de QR Code scanner aparece</p>
+                    <p>✓ Botão "📷 Abrir Câmera"</p>
+                    <p>✓ Reticula animada</p>
+                    <div class="menu-visibility">
+                        <span class="status hidden">Menu: OCULTO ❌</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="stage-number">3</div>
+                <h3>📸 Escanear QR</h3>
+                <div class="stage-content">
+                    <p>Câmera ativa e processando frames</p>
+                    <p>✓ Detecta código QR</p>
+                    <p>✓ Extrai dados do token</p>
+                    <div class="menu-visibility">
+                        <span class="status hidden">Menu: OCULTO ❌</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="stage-number">4</div>
+                <h3>✅ Autenticado!</h3>
+                <div class="stage-content">
+                    <p>Token validado e salvo</p>
+                    <p>✓ fadeIn do menu</p>
+                    <p>✓ Menu lateral visível</p>
+                    <p>✓ FAB buttons visíveis</p>
+                    <div class="menu-visibility">
+                        <span class="status visible">Menu: VISÍVEL ✅</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="stage-number">5</div>
+                <h3>📋 Lista de Sessões</h3>
+                <div class="stage-content">
+                    <p>Aplicação totalmente carregada</p>
+                    <p>✓ Menu funcional</p>
+                    <p>✓ Criar/listar sessões</p>
+                    <p>✓ FAB buttons ativos</p>
+                    <div class="menu-visibility">
+                        <span class="status visible">Menu: VISÍVEL ✅</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stage">
+                <div class="stage-number">6</div>
+                <h3>🔄 Logout</h3>
+                <div class="stage-content">
+                    <p>Clicar "O que é?" = logout</p>
+                    <p>Volta para tela de autenticação</p>
+                    <p>✓ Escanear novo QR</p>
+                    <div class="menu-visibility">
+                        <span class="status hidden">Menu: OCULTO ❌</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="files-section">
+            <h2>📁 Arquivos Criados/Modificados</h2>
+            <div class="file-list">
+                <div class="file-item">
+                    <div class="file-name">qr-auth.js</div>
+                    <span class="badge badge-new">NOVO</span>
+                    <div class="file-desc">Componente principal de autenticação com QR scanner</div>
+                </div>
+                
+                <div class="file-item">
+                    <div class="file-name">front.js</div>
+                    <span class="badge badge-modified">MODIFICADO</span>
+                    <div class="file-desc">Fluxo integrado: menu oculto até autenticação</div>
+                </div>
+                
+                <div class="file-item">
+                    <div class="file-name">style.css</div>
+                    <span class="badge badge-modified">MODIFICADO</span>
+                    <div class="file-desc">Estilos do scanner QR adicionados</div>
+                </div>
+                
+                <div class="file-item">
+                    <div class="file-name">qr-auth-test.png</div>
+                    <span class="badge badge-generated">GERADO</span>
+                    <div class="file-desc">QR code pré-gerado para testes</div>
+                </div>
+                
+                <div class="file-item">
+                    <div class="file-name">qr-generator.html</div>
+                    <span class="badge badge-new">NOVO</span>
+                    <div class="file-desc">Interface web para gerar QR codes customizados</div>
+                </div>
+                
+                <div class="file-item">
+                    <div class="file-name">AUTENTICACAO-QR.md</div>
+                    <span class="badge badge-new">NOVO</span>
+                    <div class="file-desc">Documentação completa e guias de uso</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="quick-start">
+            <h2>🚀 Quick Start (3 passos)</h2>
+            <ol>
+                <li>
+                    <strong>Instalar dependências</strong>
+                    <div class="url-box">npm install</div>
+                </li>
+                <li>
+                    <strong>Rodar servidor</strong>
+                    <div class="url-box">npm run dev</div>
+                </li>
+                <li>
+                    <strong>Abrir aplicação</strong>
+                    <div class="url-box">https://localhost:5174/</div>
+                </li>
+            </ol>
+        </div>
+        
+        <div class="quick-start" style="border-color: #ffc107; background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));">
+            <h2 style="color: #ffc107;">🌐 URLs Importantes</h2>
+            <p><strong>Aplicação (com autenticação):</strong></p>
+            <div class="url-box">https://localhost:5174/</div>
+            
+            <p style="margin-top: 1rem;"><strong>Gerador de QR Code (para testes):</strong></p>
+            <div class="url-box">https://localhost:5174/qr-generator.html</div>
+            
+            <p style="margin-top: 1rem;"><strong>QR Code pré-gerado (PNG):</strong></p>
+            <div class="url-box">https://localhost:5174/public/qr-auth-test.png</div>
+        </div>
+        
+        <div class="quick-start" style="border-color: #51cf66; background: linear-gradient(135deg, rgba(81, 207, 102, 0.1), rgba(81, 207, 102, 0.05));">
+            <h2 style="color: #51cf66;">✨ Formatos de QR Code Suportados</h2>
+            <p><strong>1. Texto simples:</strong></p>
+            <div class="url-box">meu-token-123</div>
+            
+            <p style="margin-top: 1rem;"><strong>2. JSON com token:</strong></p>
+            <div class="url-box">{"token": "ar-cave-auth-2025"}</div>
+            
+            <p style="margin-top: 1rem;"><strong>3. JSON completo:</strong></p>
+            <div class="url-box">{"token": "auth", "user": "kaio", "role": "admin"}</div>
+        </div>
+        
+        <footer>
+            <p>✅ Sistema de Autenticação QR Code v2.0</p>
+            <p>Desenvolvido para AR-Cave-Immersion | 5 de novembro de 2025</p>
+        </footer>
+    </div>
+</body>
+</html>

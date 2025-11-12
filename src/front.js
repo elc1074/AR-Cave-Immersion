@@ -1,3 +1,5 @@
+import { showQRAuthScreen, isAuthenticated, clearAuth, closeQRScreen } from './qr-auth.js';
+
 const API_URL = import.meta.env.VITE_API_URL ?? 'https://ar-cave-immersionar-api.onrender.com';
 
 const modal = document.getElementById('modal');
@@ -124,28 +126,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const isDesktop = navigator.maxTouchPoints === 0;
 
+    // Função para iniciar o fluxo de autenticação
+    const startAuthFlow = () => {
+        desktopWarning.style.display = 'none';
+        setTimeout(() => logo.classList.add('visible'), 100);
+        setTimeout(() => {
+            loadingScreen.classList.add('loading-hidden');
+            loadingScreen.addEventListener('transitionend', () => loadingScreen.style.display = 'none');
+
+            console.log('🔍 Verificando autenticação...', { isAuth: isAuthenticated() });
+            
+            if (!isAuthenticated()) {
+                console.log('📱 Não autenticado - Mostrando tela QR');
+                showQRAuthScreen(() => {
+                    console.log('✅ Autenticação bem-sucedida!');
+                    closeQRScreen();
+                    sidebar.style.visibility = 'visible';
+                    sidebar.style.opacity = 1;
+                    mainContent.style.visibility = 'visible';
+                    mainContent.style.opacity = 1;
+                    fabContainer.style.visibility = 'visible';
+                    fabContainer.style.opacity = 1;
+                    window.showView('list');
+                });
+            } else {
+                console.log('✅ Já autenticado - Mostrando menu');
+                sidebar.style.visibility = 'visible';
+                sidebar.style.opacity = 1;
+                mainContent.style.visibility = 'visible';
+                mainContent.style.opacity = 1;
+                fabContainer.style.visibility = 'visible';
+                fabContainer.style.opacity = 1;
+                window.showView('list');
+            }
+        }, 3000);
+    };
+
     if (isDesktop) {
         desktopWarning.style.display = 'flex';
+        closeWarningBtn.addEventListener('click', () => {
+            startAuthFlow();
+        });
+    } else {
+        startAuthFlow();
     }
-
-    closeWarningBtn.addEventListener('click', () => {
-        desktopWarning.style.display = 'none';
-    });
-
-    setTimeout(() => logo.classList.add('visible'), 100);
-    setTimeout(() => {
-        loadingScreen.classList.add('loading-hidden');
-        loadingScreen.addEventListener('transitionend', () => loadingScreen.style.display = 'none');
-
-        sidebar.style.visibility = 'visible';
-        sidebar.style.opacity = 1;
-        mainContent.style.visibility = 'visible';
-        mainContent.style.opacity = 1;
-        fabContainer.style.visibility = 'visible';
-        fabContainer.style.opacity = 1;
-
-        window.showView('list');
-    }, 3000);
 
     const fabMainButton = document.querySelector('.fab-main-button');
     fabMainButton.addEventListener('click', () => {
@@ -242,11 +266,21 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('create-session-btn').addEventListener('click', () => showView('create'));
 document.getElementById('list-sessions-btn').addEventListener('click', () => showView('list'));
 document.getElementById('tutorial-btn').addEventListener('click', () => showPopup('Funcionalidade de Tutorial em desenvolvimento.', 'success'));
-document.getElementById('about-btn').addEventListener('click', () => showPopup('Funcionalidade de QRCode em desenvolvimento.', 'success'));
+document.getElementById('about-btn').addEventListener('click', () => {
+    clearAuth();
+    showQRAuthScreen(() => {
+        window.showView('list');
+    });
+});
 
 document.getElementById('fab-create').addEventListener('click', () => showView('create'));
 document.getElementById('fab-list').addEventListener('click', () => showView('list'));
-document.getElementById('fab-qr').addEventListener('click', () => showPopup('Funcionalidade de QRCode em desenvolvimento.', 'success'));
+document.getElementById('fab-qr').addEventListener('click', () => {
+    clearAuth();
+    showQRAuthScreen(() => {
+        window.showView('list');
+    });
+});
 
 window.showView = showView;
 window.resetView = resetView;
