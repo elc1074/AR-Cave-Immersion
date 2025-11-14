@@ -1,11 +1,14 @@
-import * as Y from 'yjs';
-import { TubePainter } from '/public/jsm/misc/TubePainter.js';
-import * as THREE from 'three';
+import * as Y from 'yjs'
+import { TubePainter } from '/public/jsm/misc/TubePainter.js'
+import * as THREE from 'three'
 
 export class CollaborativeTubePainter extends TubePainter {
-    constructor(ydoc, sessionId) {
+    constructor(ydoc, sessionId, painters = []) {
         super()
-        this.strokes = ydoc.getArray(`session_${sessionId}_strokes`)
+        this.sessionId = sessionId
+        this.painters = painters // Array de todos os painters para renderizar em todos
+        // Usar o mesmo nome consistente para o array de traços
+        this.strokes = ydoc.getArray('strokes')
         this.currentStroke = []
         this.setupSync()
     }
@@ -36,14 +39,20 @@ export class CollaborativeTubePainter extends TubePainter {
     replay(stroke) {
         try {
             const { points, color } = stroke
-            this.setColor(new THREE.Color(color))
-            this.moveTo(new THREE.Vector3().copy(points[0]))
-            points.slice(1).forEach(point => {
-                this.lineTo(new THREE.Vector3().copy(point))
+            
+            // Renderizar em todos os painters
+            this.painters.forEach(painter => {
+                painter.setColor(new THREE.Color(color))
+                painter.moveTo(new THREE.Vector3(points[0].x, points[0].y, points[0].z))
+                
+                for (let i = 1; i < points.length; i++) {
+                    const point = points[i]
+                    painter.lineTo(new THREE.Vector3(point.x, point.y, point.z))
+                }
+                painter.update()
             })
-            this.update()
         } catch (error) {
-            console.error('Error replaying stroke:', error)
+            console.error('Erro ao reproduzir traço:', error, stroke)
         }
     }
 
@@ -63,8 +72,19 @@ export class CollaborativeTubePainter extends TubePainter {
             timestamp: Date.now()
         }
 
+        // Adicionar ao array Y.js (que será observado e sincronizado)
         this.strokes.push([stroke])
         this.currentStroke = []
         return stroke
+    }
+
+    clearCurrentStroke() {
+        this.currentStroke = []
+    }
+
+    destroy() {
+        this.strokes = null
+        this.painters = []
+        this.currentStroke = []
     }
 }

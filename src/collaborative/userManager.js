@@ -2,9 +2,10 @@ import { initWebSocket } from './webSocketProvider.js'
 
 export class UserManager {
     constructor(sessionId) {
+        this.sessionId = sessionId
         const { awareness } = initWebSocket(sessionId)
         this.awareness = awareness
-        this.sessionId = sessionId
+        this.onUserChangeCallbacks = []
         this.localUser = {
             id: sessionId,
             color: this.getRandomColor(),
@@ -24,10 +25,8 @@ export class UserManager {
 
     setupEventListeners() {
         this.awareness.on('change', () => {
-            const states = this.awareness.getStates()
-            const users = Array.from(states.values())
-                .map(state => state.user)
-                .filter(Boolean)
+            const users = this.getAllUsers()
+            this.notifyUserChange(users)
             this.updateUserList(users)
         })
 
@@ -39,10 +38,14 @@ export class UserManager {
 
     updateUserList(users) {
         const userList = document.getElementById('userList')
-        if (!userList) return
+        if (!userList) {
+            console.warn('Elemento #userList não encontrado')
+            return
+        }
 
         userList.innerHTML = ''
         users.forEach(user => {
+            if (!user) return
             const userElement = document.createElement('div')
             userElement.className = 'user-item'
             userElement.innerHTML = `
@@ -66,5 +69,25 @@ export class UserManager {
         return Array.from(this.awareness.getStates().values())
             .map(state => state.user)
             .filter(Boolean)
+    }
+
+    onUserChange(callback) {
+        this.onUserChangeCallbacks.push(callback)
+    }
+
+    notifyUserChange(users) {
+        this.onUserChangeCallbacks.forEach(callback => {
+            try {
+                callback(users)
+            } catch (error) {
+                console.error('Erro ao executar callback de usuários:', error)
+            }
+        })
+    }
+
+    destroy() {
+        this.awareness.setLocalState(null)
+        this.onUserChangeCallbacks = []
+        this.awareness = null
     }
 }
