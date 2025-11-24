@@ -623,34 +623,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-});
-
-document.getElementById('create-session-btn').addEventListener('click', () => showView('create'));
-document.getElementById('list-sessions-btn').addEventListener('click', () => showView('list'));
-document.getElementById('tutorial-btn').addEventListener('click', () => showTutorial());
-document.getElementById('about-btn').addEventListener('click', () => {
-    showAbout();
-});
-document.getElementById('scan-qrcode').addEventListener('click', () => {
-    clearAuth();
-    showQRAuthScreen(() => {
-        window.showView('list');
+    // Event listeners dos botões do sidebar
+    document.getElementById('create-session-btn').addEventListener('click', () => showView('create'));
+    document.getElementById('list-sessions-btn').addEventListener('click', () => showView('list'));
+    document.getElementById('tutorial-btn').addEventListener('click', () => showTutorial());
+    document.getElementById('about-btn').addEventListener('click', () => {
+        showAbout();
     });
-});
+    
+    const scanQrcodeBtn = document.getElementById('scan-qrcode');
+    if (scanQrcodeBtn) {
+        scanQrcodeBtn.addEventListener('click', () => {
+            clearAuth();
+            showQRAuthScreen(() => {
+                window.showView('list');
+            });
+        });
+    }
 
-document.getElementById('fab-create').addEventListener('click', () => showView('create'));
-document.getElementById('fab-list').addEventListener('click', () => showView('list'));
-document.getElementById('fab-qr').addEventListener('click', () => {
-    clearAuth();
-    showQRAuthScreen(() => {
-        window.showView('list');
+    // Event listeners dos FAB buttons
+    document.getElementById('fab-create').addEventListener('click', () => showView('create'));
+    document.getElementById('fab-list').addEventListener('click', () => showView('list'));
+    document.getElementById('fab-qr').addEventListener('click', () => {
+        clearAuth();
+        showQRAuthScreen(() => {
+            window.showView('list');
+        });
     });
+
 });
 
+// Expor funções globalmente
 window.showView = showView;
 window.resetView = resetView;
 window.saveSession = saveSession;
 window.selectSession = selectSession;
 window.showTutorial = showTutorial;
 window.showAbout = showAbout;
-window.iniciarExperienciaAR = (sessionId) => { console.log("Função de AR chamada para sessão:", sessionId); };
+window.iniciarExperienciaAR = (sessionId) => { 
+    console.log("Função de AR chamada para sessão:", sessionId);
+    // Aqui será chamado o código de AR do main.js quando estiver pronto
+};
